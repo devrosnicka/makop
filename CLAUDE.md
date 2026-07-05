@@ -33,8 +33,9 @@ See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md)
 - Build (prod image): `docker compose -f docker-compose.prod.yml build`
 - Backend typecheck/build: `cd backend && npm run build`
 - Frontend build: `cd frontend && npm run build`
-- Seed an allowed manager login (dev): `cd backend && npm run add-allowed-user -- <email>`
-- Seed an allowed manager login (prod, over SSH): `docker compose -f docker-compose.prod.yml exec backend npm run add-allowed-user:prod -- <email>`
+- Seed an allowed manager login: run SQL directly against the DB, e.g.
+  `INSERT INTO users (email, name) VALUES ('you@example.com', 'You') ON CONFLICT (email) DO NOTHING;`
+  — in prod, over SSH via `docker compose -f docker-compose.prod.yml exec db psql -U "$DB_USER" -d "$DB_NAME"`.
 - Test: none yet — add when the first real feature lands
 - Lint: none yet — add when the first real feature lands
 

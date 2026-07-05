@@ -5,9 +5,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "tsx watch src/server.ts",
-    "add-allowed-user": "tsx src/scripts/add-allowed-user.ts",
-    "add-allowed-user:prod": "node dist/scripts/add-allowed-user.js"
+    "dev": "tsx watch src/server.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.0",

@@ -31,11 +31,9 @@ password:
   session store. Every protected route (the roster's routes and future
   admin routes) shares one `authenticate` preHandler guard.
 - **No passwords stored anywhere** — `users` holds `email`, `google_sub`, and
-  `name`, not a credential. Seeding the allowlist is a one-off CLI script
-  (`backend/src/scripts/add-allowed-user.ts`), not a signup form. It's built
-  alongside the server (`tsc` compiles everything under `src/`), so the same
-  script runs via `tsx` in dev and via compiled `dist/` in production —
-  `npm run add-allowed-user` vs. `npm run add-allowed-user:prod`.
+  `name`, not a credential. Seeding the allowlist is a manual SQL `INSERT`
+  against the `users` table, not a signup form or dedicated CLI — with only a
+  handful of users expected, a script wasn't worth building or maintaining.
 - Google Cloud OAuth consent screen stays in **Testing** mode with an explicit
   list of allowed test users, avoiding Google's app-verification process for
   what is effectively a single-manager tool.
@@ -55,6 +53,6 @@ password:
   `docker-compose.yml`, `docker-compose.prod.yml`, and the GitHub Actions
   deploy workflow. Redirect URIs must be kept in sync per environment
   (`localhost:5173` in dev, `makop.tomaskrizek.cz` in prod).
-- Adding a second manager later is a one-line `INSERT` via the CLI script, not
-  a new signup flow — deliberately minimal until multi-manager needs grow
-  beyond an allowlist.
+- Adding a second manager later is a one-line manual `INSERT`, not a new
+  signup flow — deliberately minimal until multi-manager needs grow beyond an
+  allowlist.

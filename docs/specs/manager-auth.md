@@ -37,7 +37,7 @@ Acceptance criteria:
 - Google OAuth login/logout flow, session cookie, `authenticate` guard
   reusable by future routes.
 - `users` table as an email allowlist (no passwords).
-- CLI script to seed allowlisted emails.
+- Allowlisted emails seeded by manual SQL `INSERT` (no dedicated tooling for now).
 - Minimal frontend: sign-in button, logged-in state, logout — no routing.
 
 **Out of scope:**
@@ -49,10 +49,8 @@ Acceptance criteria:
 ## Technical approach
 - Key files/modules touched: `db/init.sql`, `backend/src/auth/plugin.ts`
   (new), `backend/src/routes/auth.ts` (new), `backend/src/server.ts`,
-  `backend/src/scripts/add-allowed-user.ts` (new — compiled into
-  `dist/scripts/` alongside the server, so it also runs in the production
-  image via `npm run add-allowed-user:prod`), `frontend/src/api/client.ts`
-  (new), `frontend/src/auth/AuthContext.tsx` (new), `frontend/src/App.tsx`.
+  `frontend/src/api/client.ts` (new), `frontend/src/auth/AuthContext.tsx`
+  (new), `frontend/src/App.tsx`.
 - Existing utilities/patterns to reuse: routes follow the self-prefixed
   `/api/...` convention and shared `pool` import from `backend/src/routes/health.ts`;
   no ORM, raw parameterized SQL, matching ADR 0001.
@@ -84,7 +82,8 @@ Acceptance criteria:
 How we'll prove this works end-to-end (not just "tests pass"):
 - [ ] `docker compose down -v && docker compose up --build` (fresh volume so
       `init.sql` creates the `users` table).
-- [ ] `npm run add-allowed-user -- manager@example.com` seeds the allowlist.
+- [ ] `INSERT INTO users (email, name) VALUES ('manager@example.com', 'Manager');`
+      seeds the allowlist.
 - [ ] `curl -i localhost:5173/api/whoami` → 401 with no cookie.
 - [ ] Sign in with Google (allowlisted email) via the UI → redirected back,
       `/api/me` shows `authenticated: true`, `/api/whoami` succeeds with the
