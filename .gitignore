@@ -16,7 +16,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Dependencies / build output (uncomment once the stack is chosen)
-# node_modules/
-# dist/
-# build/
+# Dependencies / build output
+node_modules/
+dist/
+build/
