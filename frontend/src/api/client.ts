@@ -5,7 +5,9 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   const res = await fetch(path, {
     ...options,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: options.body
+      ? { 'Content-Type': 'application/json', ...options.headers }
+      : options.headers,
   });
 
   if (!res.ok) {
