@@ -10,8 +10,11 @@ See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md)
 - **Frontend:** React + Vite + TypeScript (SPA), served via `/api` proxy in dev
   and as static files from Fastify in prod.
 - **Database:** PostgreSQL 16, schema seeded via `db/init.sql`.
-- **Infra:** Docker (multi-stage build) + Docker Compose; Caddy reverse proxy
-  and GitHub Actions → GHCR → VPS deploy in production.
+- **Infra:** Docker (multi-stage build) + Docker Compose; production runs
+  behind a shared `caddy-docker-proxy` on the VPS (owns ports 80/443,
+  routes by Docker labels over the external `caddy_net` network — see
+  [ADR 0002](docs/decisions/0002-shared-reverse-proxy.md)); GitHub Actions →
+  GHCR → VPS deploy.
 
 ## Commands
 - Dev server: `docker compose up --build` (Postgres + Fastify @:3000 + Vite @:5173)

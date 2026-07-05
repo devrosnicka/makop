@@ -51,7 +51,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.prod.yml,db/,Caddyfile"
+          source: "docker-compose.prod.yml,db/"
           target: "/opt/makop"
 
       - name: Deploy on VPS
