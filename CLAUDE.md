@@ -4,15 +4,22 @@
 `makop` is a web app. (One-liner to expand as the product direction firms up.)
 
 ## Stack
-**TBD** — not chosen yet. See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md).
-Once decided, fill in here: language, framework, database, hosting/deploy target.
+See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md) for the full rationale.
+
+- **Backend:** Node 24 + TypeScript + Fastify, raw `pg` driver (no ORM yet).
+- **Frontend:** React + Vite + TypeScript (SPA), served via `/api` proxy in dev
+  and as static files from Fastify in prod.
+- **Database:** PostgreSQL 16, schema seeded via `db/init.sql`.
+- **Infra:** Docker (multi-stage build) + Docker Compose; Caddy reverse proxy
+  and GitHub Actions → GHCR → VPS deploy in production.
 
 ## Commands
-Fill in once the stack is chosen:
-- Dev server: `TBD`
-- Build: `TBD`
-- Test: `TBD`
-- Lint: `TBD`
+- Dev server: `docker compose up --build` (Postgres + Fastify @:3000 + Vite @:5173)
+- Build (prod image): `docker compose -f docker-compose.prod.yml build`
+- Backend typecheck/build: `cd backend && npm run build`
+- Frontend build: `cd frontend && npm run build`
+- Test: none yet — add when the first real feature lands
+- Lint: none yet — add when the first real feature lands
 
 ## Planning workflow
 This repo is the source of truth for planning — docs live here so Claude Code
