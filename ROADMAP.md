@@ -9,12 +9,12 @@ Once a feature actually gets built, it's fine to write a spec for it in
 and lazy — most items here will never need one.
 
 ## 🔨 In progress
-_Nothing yet — move an item here from Ideas when you start working on it._
+- Player roster — list of team members with basic contact details. →
+  [spec](docs/specs/player-roster.md)
 
 ## 💡 Ideas
 
 **Team & players**
-- Player roster — list of team members with basic contact details.
 
 **Events & calendar**
 - Event calendar — league matches with date, time, and location.

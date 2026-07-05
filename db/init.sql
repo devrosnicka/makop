@@ -12,3 +12,17 @@ CREATE TABLE IF NOT EXISTS users (
   name       TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Player roster (see docs/specs/player-roster.md). Basic contact details for
+-- team members; only `name` is required. No teams/grouping concept yet —
+-- there's only one team.
+CREATE TABLE IF NOT EXISTS players (
+  id            SERIAL PRIMARY KEY,
+  name          TEXT NOT NULL,
+  email         TEXT,
+  phone         TEXT,
+  jersey_number INTEGER,
+  position      TEXT,
+  notes         TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);

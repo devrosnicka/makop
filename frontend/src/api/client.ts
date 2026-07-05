@@ -14,5 +14,10 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     throw new Error(`${options.method ?? 'GET'} ${path} failed: ${res.status}`);
   }
 
+  // 204 No Content (e.g. DELETE responses) has no body to parse.
+  if (res.status === 204) {
+    return undefined as T;
+  }
+
   return res.json() as Promise<T>;
 }

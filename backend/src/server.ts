@@ -5,6 +5,7 @@ import { dirname, join } from 'path';
 import { healthRoute } from './routes/health.js';
 import authPlugin from './auth/plugin.js';
 import { authRoute } from './routes/auth.js';
+import { playersRoute } from './routes/players.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -24,6 +25,7 @@ app.register(healthRoute);
 // before any route that uses it (see backend/src/auth/plugin.ts).
 app.register(authPlugin);
 app.register(authRoute);
+app.register(playersRoute);
 
 const PORT = Number(process.env.PORT ?? 3000);
 
