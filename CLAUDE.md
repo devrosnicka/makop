@@ -15,12 +15,20 @@ See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md)
   routes by Docker labels over the external `caddy_net` network — see
   [ADR 0002](docs/decisions/0002-shared-reverse-proxy.md)); GitHub Actions →
   GHCR → VPS deploy.
+- **Auth:** manager/admin routes are gated by Google login (OAuth) + a
+  stateless JWT session cookie; the `users` table is an email allowlist, not
+  an account system — see [ADR 0003](docs/decisions/0003-manager-authentication.md)
+  and [the spec](docs/specs/manager-auth.md). Player-facing features (RSVP)
+  stay login-less by design.
 
 ## Commands
 - Dev server: `docker compose up --build` (Postgres + Fastify @:3000 + Vite @:5173)
+  - Copy `.env.example` to `.env` and fill in Google OAuth credentials to
+    exercise login locally; the app runs fine without them, login just won't work.
 - Build (prod image): `docker compose -f docker-compose.prod.yml build`
 - Backend typecheck/build: `cd backend && npm run build`
 - Frontend build: `cd frontend && npm run build`
+- Seed an allowed manager login: `cd backend && npm run add-allowed-user -- <email>`
 - Test: none yet — add when the first real feature lands
 - Lint: none yet — add when the first real feature lands
 

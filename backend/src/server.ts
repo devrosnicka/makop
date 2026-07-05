@@ -3,6 +3,8 @@ import staticPlugin from '@fastify/static';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { healthRoute } from './routes/health.js';
+import authPlugin from './auth/plugin.js';
+import { authRoute } from './routes/auth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -18,6 +20,10 @@ app.register(staticPlugin, {
 });
 
 app.register(healthRoute);
+// Session/cookie support + the `authenticate` guard must be registered
+// before any route that uses it (see backend/src/auth/plugin.ts).
+app.register(authPlugin);
+app.register(authRoute);
 
 const PORT = Number(process.env.PORT ?? 3000);
 

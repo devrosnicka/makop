@@ -32,6 +32,14 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       PORT: 3000
+      # Manager auth (see docs/specs/manager-auth.md, ADR 0003). Copy
+      # .env.example to .env and fill in real Google OAuth credentials to
+      # exercise login; JWT_SECRET has an insecure dev default so the rest
+      # of the app still runs without one.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:5173/api/auth/google/callback}
+      JWT_SECRET: ${JWT_SECRET:-dev-insecure-secret-change-me}
     depends_on:
       db:
         condition: service_healthy
