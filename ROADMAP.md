@@ -1,25 +1,20 @@
 # Roadmap
 
-North star: _TBD — one or two sentences on what makop is for and who it serves._
+A living list of features makop might have one day. Product scope only — add
+or remove items freely as ideas come and go. No technical decisions here; those
+live in [`docs/decisions/`](docs/decisions/).
 
-This roadmap tracks milestones (phases), not individual tasks. Each milestone
-links to the feature specs that make it up, in [`docs/specs/`](docs/specs/).
-Granular task tracking can move to GitHub Issues later if/when that's useful;
-for now everything stays here for simplicity.
+Once a feature actually gets built, it's fine to write a spec for it in
+[`docs/specs/`](docs/specs/) and link it below with `→ spec`. This is optional
+and lazy — most items here will never need one.
 
-## M0 — Foundations
-**Goal:** Go from empty repo to a running, deployable skeleton.
+## 🔨 In progress
+_Nothing yet — move an item here from Ideas when you start working on it._
 
-- [ ] Choose the tech stack — see [ADR 0001](docs/decisions/0001-choose-stack.md)
-- [ ] Scaffold the app (framework init, project structure)
-- [ ] Basic CI (lint/test on push)
-- [ ] Basic deploy path decided (even if manual for now)
+## 💡 Ideas
+_Example items — replace with real ones:_
+- User accounts (sign up / log in)
+- Dashboard view
 
-## M1 — First feature
-**Goal:** _TBD once M0 lands._
-
-- [ ] _Add specs here as they're written_
-
-## Backlog / ideas
-Unsorted ideas that haven't been promoted to a milestone yet:
-- _add as they come up_
+## ✅ Done
+_Nothing yet — move items here once shipped._
