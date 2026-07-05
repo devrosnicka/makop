@@ -9,7 +9,12 @@ See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md)
 - **Backend:** Node 24 + TypeScript + Fastify, raw `pg` driver (no ORM yet).
 - **Frontend:** React + Vite + TypeScript (SPA), served via `/api` proxy in dev
   and as static files from Fastify in prod.
-- **Database:** PostgreSQL 16, schema seeded via `db/init.sql`.
+- **Database:** PostgreSQL 16, schema seeded via `db/init.sql`. **Caveat:**
+  this only runs when Postgres initializes a *fresh, empty* volume — it does
+  **not** apply to an already-initialized database. Every schema change needs
+  its SQL run by hand against any environment whose volume predates the
+  change (in practice: production, once it's been deployed once). No
+  migration tool yet (per ADR 0001).
 - **Infra:** Docker (multi-stage build) + Docker Compose; production runs
   behind a shared `caddy-docker-proxy` on the VPS (owns ports 80/443,
   routes by Docker labels over the external `caddy_net` network — see
@@ -28,7 +33,8 @@ See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md)
 - Build (prod image): `docker compose -f docker-compose.prod.yml build`
 - Backend typecheck/build: `cd backend && npm run build`
 - Frontend build: `cd frontend && npm run build`
-- Seed an allowed manager login: `cd backend && npm run add-allowed-user -- <email>`
+- Seed an allowed manager login (dev): `cd backend && npm run add-allowed-user -- <email>`
+- Seed an allowed manager login (prod, over SSH): `docker compose -f docker-compose.prod.yml exec backend npm run add-allowed-user:prod -- <email>`
 - Test: none yet — add when the first real feature lands
 - Lint: none yet — add when the first real feature lands
 

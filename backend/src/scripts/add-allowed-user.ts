@@ -2,9 +2,11 @@
 // ADR 0003). Google verifies identity; this script is how an email becomes
 // eligible to actually log in.
 //
-// Usage: npm run add-allowed-user -- <email> [name]
+// Dev:  npm run add-allowed-user -- <email> [name]
+// Prod: npm run add-allowed-user:prod -- <email> [name]  (runs the compiled
+//       dist/ version — the runtime image has no devDependencies/tsx)
 
-import { pool } from '../src/db.js';
+import { pool } from '../db.js';
 
 async function main() {
   const [email, name] = process.argv.slice(2);

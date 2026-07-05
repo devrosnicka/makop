@@ -32,7 +32,10 @@ password:
   admin routes) shares one `authenticate` preHandler guard.
 - **No passwords stored anywhere** — `users` holds `email`, `google_sub`, and
   `name`, not a credential. Seeding the allowlist is a one-off CLI script
-  (`backend/scripts/add-allowed-user.ts`), not a signup form.
+  (`backend/src/scripts/add-allowed-user.ts`), not a signup form. It's built
+  alongside the server (`tsc` compiles everything under `src/`), so the same
+  script runs via `tsx` in dev and via compiled `dist/` in production —
+  `npm run add-allowed-user` vs. `npm run add-allowed-user:prod`.
 - Google Cloud OAuth consent screen stays in **Testing** mode with an explicit
   list of allowed test users, avoiding Google's app-verification process for
   what is effectively a single-manager tool.

@@ -49,7 +49,9 @@ Acceptance criteria:
 ## Technical approach
 - Key files/modules touched: `db/init.sql`, `backend/src/auth/plugin.ts`
   (new), `backend/src/routes/auth.ts` (new), `backend/src/server.ts`,
-  `backend/scripts/add-allowed-user.ts` (new), `frontend/src/api/client.ts`
+  `backend/src/scripts/add-allowed-user.ts` (new — compiled into
+  `dist/scripts/` alongside the server, so it also runs in the production
+  image via `npm run add-allowed-user:prod`), `frontend/src/api/client.ts`
   (new), `frontend/src/auth/AuthContext.tsx` (new), `frontend/src/App.tsx`.
 - Existing utilities/patterns to reuse: routes follow the self-prefixed
   `/api/...` convention and shared `pool` import from `backend/src/routes/health.ts`;
@@ -57,6 +59,13 @@ Acceptance criteria:
 - Notable trade-offs or open questions: stateless JWT session means no
   server-side revocation short of rotating `JWT_SECRET` — acceptable for a
   single-manager tool; revisit if multi-manager/session-revocation needs grow.
+- **Deploy caveat (bit us once already):** `db/init.sql` only runs when
+  Postgres initializes a *fresh, empty* volume — it does **not** apply to an
+  already-initialized database. Every schema change in this feature (and
+  every future one, e.g. the player roster's `players` table) needs its
+  `CREATE TABLE`/`ALTER TABLE` statements run by hand against any environment
+  whose volume predates the change (in practice: production). No migration
+  tool exists yet (per ADR 0001) to automate this.
 
 ### One-time external setup (manual, per environment)
 1. Create a Google Cloud project.
