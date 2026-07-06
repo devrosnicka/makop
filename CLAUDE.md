@@ -8,12 +8,7 @@ See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md)
 
 - **Backend:** Node 24 + TypeScript + Fastify, raw `pg` driver (no ORM yet).
 - **Frontend:** React + Vite + TypeScript (SPA), served via `/api` proxy in dev
-  and as static files from Fastify in prod. UI components from
-  [Mantine](https://mantine.dev) (`@mantine/core`, `@mantine/hooks`,
-  `@mantine/form`); pinned to the 8.x line since 9.x requires React 19.
-  Theme lives in `frontend/src/theme.ts` (light, minimal-futuristic: near-white
-  base, sharp/small radius, single indigo accent, mono type for numeric/status
-  fields).
+  and as static files from Fastify in prod.
 - **Database:** PostgreSQL 16, schema seeded via `db/init.sql`. **Caveat:**
   this only runs when Postgres initializes a *fresh, empty* volume — it does
   **not** apply to an already-initialized database. Every schema change needs
