@@ -1,4 +1,20 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Container,
+  Group,
+  Loader,
+  SimpleGrid,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
+import { useForm } from '@mantine/form';
 import { useAuth } from './auth/AuthContext';
 import { apiFetch } from './api/client';
 
@@ -46,24 +62,38 @@ function loginErrorMessage(): string | null {
 function LoginPanel() {
   const loginError = loginErrorMessage();
   return (
-    <div>
-      {loginError && <p role="alert">{loginError}</p>}
-      <a href="/api/auth/google">
-        <button type="button">Sign in with Google</button>
-      </a>
-    </div>
+    <Card>
+      <Stack gap="sm" align="flex-start">
+        {loginError && (
+          <Alert color="red" title="Sign-in failed" variant="light" w="100%">
+            {loginError}
+          </Alert>
+        )}
+        <Text size="sm" c="dimmed">
+          Manager sign-in required.
+        </Text>
+        <Button component="a" href="/api/auth/google">
+          Sign in with Google
+        </Button>
+      </Stack>
+    </Card>
   );
 }
 
 function SignedInPanel() {
   const { email, logout } = useAuth();
   return (
-    <div>
-      <p>Signed in as {email}</p>
-      <button type="button" onClick={() => void logout()}>
+    <Group justify="space-between">
+      <Group gap="xs">
+        <Badge variant="light" color="brand">
+          Signed in
+        </Badge>
+        <Text size="sm">{email}</Text>
+      </Group>
+      <Button variant="subtle" size="xs" onClick={() => void logout()}>
         Log out
-      </button>
-    </div>
+      </Button>
+    </Group>
   );
 }
 
@@ -71,8 +101,14 @@ function RosterPanel() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState<NewPlayer>(emptyNewPlayer);
   const [submitting, setSubmitting] = useState(false);
+
+  const form = useForm<NewPlayer>({
+    initialValues: emptyNewPlayer,
+    validate: {
+      name: (value) => (value.trim().length === 0 ? 'Name is required.' : null),
+    },
+  });
 
   useEffect(() => {
     apiFetch<{ players: Player[] }>('/api/players')
@@ -81,29 +117,16 @@ function RosterPanel() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleAdd(event: FormEvent) {
-    event.preventDefault();
-    if (form.name.trim().length === 0) {
-      setError('Name is required.');
-      return;
-    }
-
+  async function handleAdd(values: NewPlayer) {
     setSubmitting(true);
     setError(null);
     try {
       const created = await apiFetch<Player>('/api/players', {
         method: 'POST',
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          jersey_number: form.jersey_number,
-          position: form.position,
-          notes: form.notes,
-        }),
+        body: JSON.stringify(values),
       });
       setPlayers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
-      setForm(emptyNewPlayer);
+      form.reset();
     } catch (err) {
       setError(String(err));
     } finally {
@@ -122,65 +145,87 @@ function RosterPanel() {
   }
 
   return (
-    <>
-      <h2>Player roster</h2>
-      {error && <p role="alert">Error: {error}</p>}
-      {loading && <p>Loading...</p>}
-      {!loading && (
-        <ul>
-          {players.map((player) => (
-            <li key={player.id}>
-              {player.name}
-              {player.jersey_number != null && ` (#${player.jersey_number})`}
-              {player.position && ` — ${player.position}`}
-              {player.email && ` — ${player.email}`}
-              {player.phone && ` — ${player.phone}`}
-              {player.notes && ` — ${player.notes}`}{' '}
-              <button type="button" onClick={() => void handleDelete(player.id)}>
-                Delete
-              </button>
-            </li>
-          ))}
-          {players.length === 0 && <li>No players yet.</li>}
-        </ul>
-      )}
-      <form onSubmit={(event) => void handleAdd(event)}>
-        <input
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          required
-        />
-        <input
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
-        <input
-          placeholder="Phone"
-          value={form.phone}
-          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-        />
-        <input
-          placeholder="Jersey #"
-          value={form.jersey_number}
-          onChange={(e) => setForm({ ...form, jersey_number: e.target.value })}
-        />
-        <input
-          placeholder="Position"
-          value={form.position}
-          onChange={(e) => setForm({ ...form, position: e.target.value })}
-        />
-        <input
-          placeholder="Notes"
-          value={form.notes}
-          onChange={(e) => setForm({ ...form, notes: e.target.value })}
-        />
-        <button type="submit" disabled={submitting}>
-          Add player
-        </button>
-      </form>
-    </>
+    <Card>
+      <Stack gap="md">
+        <Title order={3}>Player roster</Title>
+        {error && (
+          <Alert color="red" variant="light">
+            {error}
+          </Alert>
+        )}
+        {loading ? (
+          <Group gap="xs">
+            <Loader size="sm" />
+            <Text size="sm" c="dimmed">
+              Loading...
+            </Text>
+          </Group>
+        ) : (
+          <Table verticalSpacing="xs" highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>#</Table.Th>
+                <Table.Th>Name</Table.Th>
+                <Table.Th>Position</Table.Th>
+                <Table.Th>Email</Table.Th>
+                <Table.Th>Phone</Table.Th>
+                <Table.Th>Notes</Table.Th>
+                <Table.Th />
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {players.map((player) => (
+                <Table.Tr key={player.id}>
+                  <Table.Td ff="monospace">{player.jersey_number ?? ''}</Table.Td>
+                  <Table.Td>{player.name}</Table.Td>
+                  <Table.Td>{player.position}</Table.Td>
+                  <Table.Td>{player.email}</Table.Td>
+                  <Table.Td>{player.phone}</Table.Td>
+                  <Table.Td>{player.notes}</Table.Td>
+                  <Table.Td>
+                    <Button
+                      variant="subtle"
+                      color="red"
+                      size="xs"
+                      onClick={() => void handleDelete(player.id)}
+                    >
+                      Delete
+                    </Button>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+              {players.length === 0 && (
+                <Table.Tr>
+                  <Table.Td colSpan={7}>
+                    <Text size="sm" c="dimmed">
+                      No players yet.
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        )}
+
+        <form onSubmit={form.onSubmit((values) => void handleAdd(values))}>
+          <Stack gap="sm">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
+              <TextInput label="Name" required {...form.getInputProps('name')} />
+              <TextInput label="Email" {...form.getInputProps('email')} />
+              <TextInput label="Phone" {...form.getInputProps('phone')} />
+              <TextInput label="Jersey #" {...form.getInputProps('jersey_number')} />
+              <TextInput label="Position" {...form.getInputProps('position')} />
+              <TextInput label="Notes" {...form.getInputProps('notes')} />
+            </SimpleGrid>
+            <Group justify="flex-end">
+              <Button type="submit" loading={submitting}>
+                Add player
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Stack>
+    </Card>
   );
 }
 
@@ -196,17 +241,37 @@ function HealthPanel() {
   }, []);
 
   return (
-    <>
-      <h2>Backend status</h2>
-      {error && <p>Error: {error}</p>}
-      {!error && !health && <p>Loading...</p>}
-      {health && (
-        <ul>
-          <li>DB: {health.db}</li>
-          <li>Server time: {health.serverTime}</li>
-        </ul>
-      )}
-    </>
+    <Card>
+      <Stack gap="xs">
+        <Title order={4}>Backend status</Title>
+        {error && (
+          <Alert color="red" variant="light">
+            {error}
+          </Alert>
+        )}
+        {!error && !health && <Loader size="sm" />}
+        {health && (
+          <Group gap="lg">
+            <Group gap="xs">
+              <Text size="sm" c="dimmed">
+                DB
+              </Text>
+              <Badge color={health.db === 'ok' ? 'green' : 'red'} variant="light">
+                {health.db}
+              </Badge>
+            </Group>
+            <Group gap="xs">
+              <Text size="sm" c="dimmed">
+                Server time
+              </Text>
+              <Text size="sm" ff="monospace">
+                {health.serverTime}
+              </Text>
+            </Group>
+          </Group>
+        )}
+      </Stack>
+    </Card>
   );
 }
 
@@ -214,14 +279,26 @@ export default function App() {
   const { loading, authenticated } = useAuth();
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
-      <h1>makop</h1>
-      <p>Team management for a Sunday-league small-sided football team.</p>
-      <h2>Manager sign-in</h2>
-      {loading && <p>Loading...</p>}
-      {!loading && (authenticated ? <SignedInPanel /> : <LoginPanel />)}
-      {!loading && authenticated && <RosterPanel />}
-      <HealthPanel />
-    </main>
+    <Container size="sm" py="xl">
+      <Stack gap="lg">
+        <Stack gap={4}>
+          <Title order={1}>makop</Title>
+          <Text c="dimmed">Team management for a Sunday-league small-sided football team.</Text>
+        </Stack>
+
+        {loading ? (
+          <Loader size="sm" />
+        ) : authenticated ? (
+          <>
+            <SignedInPanel />
+            <RosterPanel />
+          </>
+        ) : (
+          <LoginPanel />
+        )}
+
+        <HealthPanel />
+      </Stack>
+    </Container>
   );
 }
