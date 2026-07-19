@@ -21,3 +21,11 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+
+# design-sync (claude.ai/design) — staged converter, generated bundle, and
+# machine state; .design-sync/ itself IS committed except these subpaths
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
