@@ -7,8 +7,15 @@
 See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md) for the full rationale.
 
 - **Backend:** Node 24 + TypeScript + Fastify, raw `pg` driver (no ORM yet).
-- **Frontend:** React + Vite + TypeScript (SPA), served via `/api` proxy in dev
-  and as static files from Fastify in prod.
+- **Frontend:** React 19 + Vite + TypeScript (SPA), served via `/api` proxy in
+  dev and as static files from Fastify in prod. UI components are
+  [shadcn/ui](https://ui.shadcn.com) on Tailwind CSS v4 (component source
+  lives in `frontend/src/components/ui/`, copied in via `npx shadcn add`, not
+  a runtime dependency) — see
+  [ADR 0004](docs/decisions/0004-adopt-shadcn-ui.md). Theme tokens in
+  `frontend/src/index.css` are extracted from the developer's Claude Design
+  project ("Makop Hazard App"): dark surfaces, brand-yellow accent,
+  Archivo/Space Grotesk/JetBrains Mono type.
 - **Database:** PostgreSQL 16, schema seeded via `db/init.sql`. **Caveat:**
   this only runs when Postgres initializes a *fresh, empty* volume — it does
   **not** apply to an already-initialized database. Every schema change needs
@@ -62,6 +69,12 @@ reads them every session, not in a separate tool.
   if collaborators join.
 - Before marking a feature done, verify it end-to-end (run it, don't just read
   the diff) and check its spec's acceptance criteria.
+- Build frontend UI from `frontend/src/components/ui/` (shadcn) primitives —
+  don't hand-roll markup or inline styles for anything those primitives cover.
+  Feature-level components live in `frontend/src/components/panels/` (or a
+  similarly named feature folder) and compose the primitives; `App.tsx` stays
+  layout-only. Need a component that isn't pulled in yet? Run
+  `npx shadcn add <component>` from `frontend/`.
 
 ## Guardrails
 - Keep this file current — update it whenever stack, commands, or conventions change.
