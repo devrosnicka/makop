@@ -69,7 +69,11 @@ first item under **Team & players** in `ROADMAP.md`.
     `docker compose -f docker-compose.prod.yml exec db psql -U "$DB_USER" -d "$DB_NAME"`
     then run the `CREATE TABLE` statement from `db/init.sql`.
   - No router introduced — the roster lives as a panel in the single-page
-    `App.tsx`, consistent with the app's current structure.
+    `App.tsx`, consistent with the app's current structure. **Superseded:**
+    [ADR 0005](../decisions/0005-adopt-tanstack-router-and-query.md) later
+    introduced TanStack Router/Query; the roster now lives at `/players`
+    (`frontend/src/pages/PlayersPage.tsx`) on Query hooks instead of a panel
+    with manual `useEffect` fetching.
 
 ## Verification
 How we'll prove this works end-to-end (not just "tests pass"):

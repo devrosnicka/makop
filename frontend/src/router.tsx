@@ -1,0 +1,74 @@
+import type { QueryClient } from '@tanstack/react-query';
+import { createRootRouteWithContext, createRoute, createRouter, redirect } from '@tanstack/react-router';
+import { queryClient } from './api/queryClient';
+import { meQueryOptions } from './api/queries';
+import { RootLayout } from './components/layout/RootLayout';
+import { LoginPage } from './pages/LoginPage';
+import { PlayersPage } from './pages/PlayersPage';
+import { CalendarPage } from './pages/CalendarPage';
+
+type RouterContext = {
+  queryClient: QueryClient;
+};
+
+const rootRoute = createRootRouteWithContext<RouterContext>()({
+  component: RootLayout,
+});
+
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  beforeLoad: () => {
+    throw redirect({ to: '/players' });
+  },
+});
+
+type LoginSearch = { error?: 'denied' | 'oauth_failed' };
+
+export const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  validateSearch: (search: Record<string, unknown>): LoginSearch => ({
+    error:
+      search.error === 'denied' || search.error === 'oauth_failed' ? search.error : undefined,
+  }),
+  component: LoginPage,
+});
+
+// Protected routes share this guard: resolve (or fetch) the `me` query and
+// redirect to /login if the session isn't authenticated. Using
+// ensureQueryData means the auth check and the auth data fetch are the same
+// call — see ADR 0005.
+async function requireAuth({ context }: { context: RouterContext }) {
+  const me = await context.queryClient.ensureQueryData(meQueryOptions);
+  if (!me.authenticated) {
+    throw redirect({ to: '/login' });
+  }
+}
+
+const playersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/players',
+  beforeLoad: requireAuth,
+  component: PlayersPage,
+});
+
+const calendarRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/calendar',
+  beforeLoad: requireAuth,
+  component: CalendarPage,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, loginRoute, playersRoute, calendarRoute]);
+
+export const router = createRouter({
+  routeTree,
+  context: { queryClient },
+});
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}

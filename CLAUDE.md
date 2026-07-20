@@ -8,10 +8,16 @@ See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md)
 
 - **Backend:** Node 24 + TypeScript + Fastify, raw `pg` driver (no ORM yet).
 - **Frontend:** React 19 + Vite + TypeScript (SPA), served via `/api` proxy in
-  dev and as static files from Fastify in prod. UI components are
-  [shadcn/ui](https://ui.shadcn.com) on Tailwind CSS v4 (component source
-  lives in `frontend/src/components/ui/`, copied in via `npx shadcn add`, not
-  a runtime dependency) — see
+  dev and as static files from Fastify in prod. Routed with **TanStack
+  Router** (code-based route tree in `frontend/src/router.tsx`, pages in
+  `frontend/src/pages/`, shared chrome in `frontend/src/components/layout/`)
+  and all server state goes through **TanStack Query** (`frontend/src/api/queries.ts`
+  for queries, `mutations.ts` for mutations) — no ad hoc `useEffect` + `fetch`
+  for server data, and no more component-local auth context; see
+  [ADR 0005](docs/decisions/0005-adopt-tanstack-router-and-query.md). UI
+  components are [shadcn/ui](https://ui.shadcn.com) on Tailwind CSS v4
+  (component source lives in `frontend/src/components/ui/`, copied in via
+  `npx shadcn add`, not a runtime dependency) — see
   [ADR 0004](docs/decisions/0004-adopt-shadcn-ui.md). Theme tokens in
   `frontend/src/index.css` are extracted from the developer's Claude Design
   project ("Makop Hazard App"): dark surfaces, brand-yellow accent,
@@ -71,10 +77,15 @@ reads them every session, not in a separate tool.
   the diff) and check its spec's acceptance criteria.
 - Build frontend UI from `frontend/src/components/ui/` (shadcn) primitives —
   don't hand-roll markup or inline styles for anything those primitives cover.
-  Feature-level components live in `frontend/src/components/panels/` (or a
-  similarly named feature folder) and compose the primitives; `App.tsx` stays
-  layout-only. Need a component that isn't pulled in yet? Run
-  `npx shadcn add <component>` from `frontend/`.
+  A new feature gets its own page in `frontend/src/pages/` plus a route in
+  `frontend/src/router.tsx`; shared chrome (top nav, auth indicator) lives in
+  `frontend/src/components/layout/RootLayout.tsx`, which stays layout-only.
+  Need a component that isn't pulled in yet? Run `npx shadcn add <component>`
+  from `frontend/`.
+- Fetch and mutate server state through a TanStack Query hook
+  (`frontend/src/api/queries.ts` / `mutations.ts`), not a raw `useEffect` +
+  `fetch`/`apiFetch` in a component — see
+  [ADR 0005](docs/decisions/0005-adopt-tanstack-router-and-query.md).
 
 ## Guardrails
 - Keep this file current — update it whenever stack, commands, or conventions change.

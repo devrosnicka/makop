@@ -1,18 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { healthQueryOptions } from '@/api/queries';
 
-type Health = { db: 'ok' | 'error'; serverTime: string };
-
-export function HealthPanel() {
-  const [health, setHealth] = useState<Health | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then(setHealth)
-      .catch((err) => setError(String(err)));
-  }, []);
+export function HealthFooter() {
+  const { data: health, error, isLoading } = useQuery(healthQueryOptions);
 
   return (
     <Card>
@@ -20,8 +11,8 @@ export function HealthPanel() {
         <CardTitle className="font-display text-lg">Backend status</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-1 text-sm">
-        {error && <p className="text-destructive">Error: {error}</p>}
-        {!error && !health && <p className="text-muted-foreground">Loading...</p>}
+        {error && <p className="text-destructive">Error: {error.message}</p>}
+        {!error && isLoading && <p className="text-muted-foreground">Loading...</p>}
         {health && (
           <>
             <p>

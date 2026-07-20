@@ -1,5 +1,7 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { apiFetch } from '@/api/client';
+import { useState, type FormEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { playersQueryOptions } from '@/api/queries';
+import { useCreatePlayer, useDeletePlayer, type NewPlayer } from '@/api/mutations';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,26 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
-type Player = {
-  id: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  jersey_number: number | null;
-  position: string | null;
-  notes: string | null;
-  created_at: string;
-};
-
-type NewPlayer = {
-  name: string;
-  email: string;
-  phone: string;
-  jersey_number: string;
-  position: string;
-  notes: string;
-};
 
 const emptyNewPlayer: NewPlayer = {
   name: '',
@@ -52,58 +34,24 @@ const NEW_PLAYER_FIELDS: { key: keyof NewPlayer; label: string; placeholder: str
   { key: 'notes', label: 'Notes', placeholder: 'Notes' },
 ];
 
-export function RosterPanel() {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function PlayersPage() {
+  const { data: players = [], isLoading, error: loadError } = useQuery(playersQueryOptions);
+  const createPlayer = useCreatePlayer();
+  const deletePlayer = useDeletePlayer();
   const [form, setForm] = useState<NewPlayer>(emptyNewPlayer);
-  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    apiFetch<{ players: Player[] }>('/api/players')
-      .then((data) => setPlayers(data.players))
-      .catch((err) => setError(String(err)))
-      .finally(() => setLoading(false));
-  }, []);
+  const error = formError ?? loadError?.message ?? createPlayer.error?.message ?? deletePlayer.error?.message ?? null;
 
   async function handleAdd(event: FormEvent) {
     event.preventDefault();
     if (form.name.trim().length === 0) {
-      setError('Name is required.');
+      setFormError('Name is required.');
       return;
     }
-
-    setSubmitting(true);
-    setError(null);
-    try {
-      const created = await apiFetch<Player>('/api/players', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          jersey_number: form.jersey_number,
-          position: form.position,
-          notes: form.notes,
-        }),
-      });
-      setPlayers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
-      setForm(emptyNewPlayer);
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleDelete(id: number) {
-    setError(null);
-    try {
-      await apiFetch(`/api/players/${id}`, { method: 'DELETE' });
-      setPlayers((prev) => prev.filter((player) => player.id !== id));
-    } catch (err) {
-      setError(String(err));
-    }
+    setFormError(null);
+    await createPlayer.mutateAsync(form);
+    setForm(emptyNewPlayer);
   }
 
   return (
@@ -119,7 +67,7 @@ export function RosterPanel() {
           </Alert>
         )}
 
-        {loading ? (
+        {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
         ) : (
           <Table>
@@ -144,7 +92,11 @@ export function RosterPanel() {
                   <TableCell>{player.phone ?? '—'}</TableCell>
                   <TableCell>{player.notes ?? '—'}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => void handleDelete(player.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deletePlayer.mutate(player.id)}
+                    >
                       Delete
                     </Button>
                   </TableCell>
@@ -177,7 +129,11 @@ export function RosterPanel() {
               />
             </div>
           ))}
-          <Button type="submit" disabled={submitting} className="col-span-full sm:col-span-1 sm:self-end">
+          <Button
+            type="submit"
+            disabled={createPlayer.isPending}
+            className="col-span-full sm:col-span-1 sm:self-end"
+          >
             Add player
           </Button>
         </form>
