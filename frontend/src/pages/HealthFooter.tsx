@@ -1,29 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { healthQueryOptions } from '@/api/queries';
 
 export function HealthFooter() {
   const { data: health, error, isLoading } = useQuery(healthQueryOptions);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-display text-lg">Backend status</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-1 text-sm">
-        {error && <p className="text-destructive">Error: {error.message}</p>}
-        {!error && isLoading && <p className="text-muted-foreground">Loading...</p>}
-        {health && (
-          <>
-            <p>
-              <span className="text-muted-foreground">DB:</span> {health.db}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Server time:</span> {health.serverTime}
-            </p>
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <footer className="mt-auto border-t border-border pt-3 text-xs text-muted-foreground">
+      {error && <p className="text-destructive">Backend unreachable: {error.message}</p>}
+      {!error && isLoading && <p>Checking backend…</p>}
+      {!error && health && (
+        <p>
+          Backend · DB{' '}
+          <span className={health.db === 'ok' ? 'text-foreground' : 'text-destructive'}>
+            {health.db}
+          </span>{' '}
+          · {new Date(health.serverTime).toLocaleTimeString()}
+        </p>
+      )}
+    </footer>
   );
 }
