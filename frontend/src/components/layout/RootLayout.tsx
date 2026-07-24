@@ -13,7 +13,7 @@ export function RootLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex flex-col">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-6 pt-10 pb-6">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 pt-6 pb-4 sm:px-6 sm:pt-10 sm:pb-6">
           <Link to="/players">
             <h1 className="font-display text-3xl font-black tracking-tight">makop</h1>
           </Link>
@@ -34,14 +34,14 @@ export function RootLayout() {
         </div>
         {!loading && authenticated && (
           <div className="w-full border-y border-border bg-card">
-            <div className="mx-auto max-w-3xl px-6 py-1">
+            <div className="mx-auto max-w-3xl px-4 py-1 sm:px-6">
               <AppNav />
             </div>
           </div>
         )}
       </header>
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10">
         <Outlet />
 
         <HealthFooter />
