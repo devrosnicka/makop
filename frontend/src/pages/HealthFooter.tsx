@@ -5,7 +5,8 @@ export function HealthFooter() {
   const { data: health, error, isLoading } = useQuery(healthQueryOptions);
 
   return (
-    <footer className="mt-auto border-t border-border pt-3 text-xs text-muted-foreground">
+    <footer className="mt-auto space-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
+      <p>Team management for a Sunday-league small-sided football team.</p>
       {error && <p className="text-destructive">Backend unreachable: {error.message}</p>}
       {!error && isLoading && <p>Checking backend…</p>}
       {!error && health && (
