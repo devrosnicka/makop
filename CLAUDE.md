@@ -76,6 +76,9 @@ reads them every session, not in a separate tool.
   if collaborators join.
 - Before marking a feature done, verify it end-to-end (run it, don't just read
   the diff) and check its spec's acceptance criteria.
+- Any feature with UI must also be checked at a mobile viewport (~375px wide)
+  before shipping — confirm no horizontal overflow and that the layout stays
+  usable, not just at desktop width.
 - Build frontend UI from `frontend/src/components/ui/` (shadcn) primitives —
   don't hand-roll markup or inline styles for anything those primitives cover.
   A new feature gets its own page in `frontend/src/pages/` plus a route in

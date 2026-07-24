@@ -27,4 +27,5 @@ What problem or need does this address? What prompted it?
 ## Verification
 How we'll prove this works end-to-end (not just "tests pass"):
 - [ ] Manual check / command to run:
+- [ ] Renders correctly at a mobile viewport (~375px) — no horizontal overflow
 - [ ] Automated tests covering:

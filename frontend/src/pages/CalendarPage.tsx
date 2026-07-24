@@ -69,35 +69,37 @@ export function CalendarPage() {
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
         ) : (
-          <div className="flex items-center gap-2">
-            {days.map((day) => {
-              const key = dateKey(day);
-              const isToday = key === todayKey;
-              const count = eventCountByDay.get(key) ?? 0;
-              return (
-                <div
-                  key={key}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-lg border border-border p-2 ${
-                    isToday ? 'bg-primary text-primary-foreground' : 'bg-card'
-                  }`}
-                >
-                  <span
-                    className={`text-xs ${isToday ? 'text-primary-foreground' : 'text-muted-foreground'}`}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
+              {days.map((day) => {
+                const key = dateKey(day);
+                const isToday = key === todayKey;
+                const count = eventCountByDay.get(key) ?? 0;
+                return (
+                  <div
+                    key={key}
+                    className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg border border-border p-1.5 sm:p-2 ${
+                      isToday ? 'bg-primary text-primary-foreground' : 'bg-card'
+                    }`}
                   >
-                    {WEEKDAY_FORMAT.format(day)}
-                  </span>
-                  <span className="text-lg font-semibold">{day.getDate()}</span>
-                  {count > 0 && (
-                    <Badge variant={isToday ? 'secondary' : 'default'} className="px-1.5">
-                      {count}
-                    </Badge>
-                  )}
-                </div>
-              );
-            })}
+                    <span
+                      className={`text-xs ${isToday ? 'text-primary-foreground' : 'text-muted-foreground'}`}
+                    >
+                      {WEEKDAY_FORMAT.format(day)}
+                    </span>
+                    <span className="text-base font-semibold sm:text-lg">{day.getDate()}</span>
+                    {count > 0 && (
+                      <Badge variant={isToday ? 'secondary' : 'default'} className="px-1.5">
+                        {count}
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
             {futureCount > 0 && (
-              <Badge variant="secondary" className="shrink-0">
-                +{futureCount}
+              <Badge variant="secondary" className="self-end">
+                +{futureCount} more upcoming
               </Badge>
             )}
           </div>
