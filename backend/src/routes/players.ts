@@ -1,23 +1,28 @@
 import type { FastifyInstance } from 'fastify';
 import { pool } from '../db.js';
 
+export const PLAYER_POSITIONS = ['defender', 'goalkeeper', 'attacker'] as const;
+export type PlayerPosition = (typeof PLAYER_POSITIONS)[number];
+
 export type Player = {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string | null;
   phone: string | null;
   jersey_number: number | null;
-  position: string | null;
+  positions: PlayerPosition[];
   notes: string | null;
   created_at: string;
 };
 
 type CreatePlayerBody = {
-  name?: unknown;
+  first_name?: unknown;
+  last_name?: unknown;
   email?: unknown;
   phone?: unknown;
   jersey_number?: unknown;
-  position?: unknown;
+  positions?: unknown;
   notes?: unknown;
 };
 
@@ -29,6 +34,10 @@ function optionalText(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function isPlayerPosition(value: unknown): value is PlayerPosition {
+  return typeof value === 'string' && (PLAYER_POSITIONS as readonly string[]).includes(value);
+}
+
 /**
  * Player roster routes. See docs/specs/player-roster.md and ADR 0003 — this
  * is the feature manager auth was built to gate, so every route here attaches
@@ -36,15 +45,18 @@ function optionalText(value: unknown): string | null {
  */
 export async function playersRoute(app: FastifyInstance) {
   app.get('/api/players', { preHandler: app.authenticate }, async (_request, reply) => {
-    const { rows } = await pool.query<Player>('SELECT * FROM players ORDER BY name');
+    const { rows } = await pool.query<Player>(
+      'SELECT * FROM players ORDER BY jersey_number NULLS LAST, last_name, first_name',
+    );
     return reply.send({ players: rows });
   });
 
   app.post('/api/players', { preHandler: app.authenticate }, async (request, reply) => {
     const body = request.body as CreatePlayerBody;
-    const name = typeof body.name === 'string' ? body.name.trim() : '';
-    if (name.length === 0) {
-      return reply.status(400).send({ error: 'name is required' });
+    const firstName = typeof body.first_name === 'string' ? body.first_name.trim() : '';
+    const lastName = typeof body.last_name === 'string' ? body.last_name.trim() : '';
+    if (firstName.length === 0 || lastName.length === 0) {
+      return reply.status(400).send({ error: 'first_name and last_name are required' });
     }
 
     let jerseyNumber: number | null = null;
@@ -56,16 +68,27 @@ export async function playersRoute(app: FastifyInstance) {
       jerseyNumber = parsed;
     }
 
+    let positions: PlayerPosition[] = [];
+    if (body.positions !== undefined) {
+      if (!Array.isArray(body.positions) || !body.positions.every(isPlayerPosition)) {
+        return reply.status(400).send({
+          error: `positions must be an array of: ${PLAYER_POSITIONS.join(', ')}`,
+        });
+      }
+      positions = [...new Set(body.positions)];
+    }
+
     const { rows } = await pool.query<Player>(
-      `INSERT INTO players (name, email, phone, jersey_number, position, notes)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO players (first_name, last_name, email, phone, jersey_number, positions, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [
-        name,
+        firstName,
+        lastName,
         optionalText(body.email),
         optionalText(body.phone),
         jerseyNumber,
-        optionalText(body.position),
+        positions,
         optionalText(body.notes),
       ],
     );

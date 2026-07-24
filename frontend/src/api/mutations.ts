@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './client';
-import { meQueryOptions, playersQueryOptions, type Me, type Player } from './queries';
+import { meQueryOptions, playersQueryOptions, type Me, type Player, type PlayerPosition } from './queries';
 
 export type NewPlayer = {
-  name: string;
-  email: string;
+  first_name: string;
+  last_name: string;
   phone: string;
+  positions: PlayerPosition[];
   jersey_number: string;
-  position: string;
+  email: string;
   notes: string;
 };
 

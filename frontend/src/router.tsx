@@ -1,10 +1,12 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createRootRouteWithContext, createRoute, createRouter, redirect } from '@tanstack/react-router';
 import { queryClient } from './api/queryClient';
-import { meQueryOptions } from './api/queries';
+import { meQueryOptions, playersQueryOptions } from './api/queries';
 import { RootLayout } from './components/layout/RootLayout';
 import { LoginPage } from './pages/LoginPage';
 import { PlayersPage } from './pages/PlayersPage';
+import { NewPlayerPage } from './pages/NewPlayerPage';
+import { PlayerDetailPage } from './pages/PlayerDetailPage';
 import { CalendarPage } from './pages/CalendarPage';
 
 type RouterContext = {
@@ -53,6 +55,25 @@ const playersRoute = createRoute({
   component: PlayersPage,
 });
 
+const newPlayerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/players/new',
+  beforeLoad: requireAuth,
+  component: NewPlayerPage,
+});
+
+// Exported (like loginRoute) so PlayerDetailPage can read the $playerId param
+// via this route's own `.useParams()` — see docs/decisions/0005.
+export const playerDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/players/$playerId',
+  beforeLoad: async ({ context }) => {
+    await requireAuth({ context });
+    await context.queryClient.ensureQueryData(playersQueryOptions);
+  },
+  component: PlayerDetailPage,
+});
+
 const calendarRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/calendar',
@@ -60,7 +81,14 @@ const calendarRoute = createRoute({
   component: CalendarPage,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute, playersRoute, calendarRoute]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  loginRoute,
+  playersRoute,
+  newPlayerRoute,
+  playerDetailRoute,
+  calendarRoute,
+]);
 
 export const router = createRouter({
   routeTree,

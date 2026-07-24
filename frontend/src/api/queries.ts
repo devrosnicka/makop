@@ -3,13 +3,16 @@ import { apiFetch } from './client';
 
 export type Me = { authenticated: boolean; email?: string };
 export type Health = { db: 'ok' | 'error'; serverTime: string };
+export type PlayerPosition = 'defender' | 'goalkeeper' | 'attacker';
+
 export type Player = {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string | null;
   phone: string | null;
   jersey_number: number | null;
-  position: string | null;
+  positions: PlayerPosition[];
   notes: string | null;
   created_at: string;
 };
