@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { apiFetch } from './client';
 import { meQueryOptions, playersQueryOptions, type Me, type Player, type PlayerPosition } from './queries';
 
@@ -31,10 +32,12 @@ export function useDeletePlayer() {
 
 export function useLogout() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   return useMutation({
     mutationFn: () => apiFetch('/api/logout', { method: 'POST' }),
     onSuccess: () => {
       queryClient.setQueryData<Me>(meQueryOptions.queryKey, { authenticated: false });
+      navigate({ to: '/login' });
     },
   });
 }
