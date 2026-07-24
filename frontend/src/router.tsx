@@ -1,13 +1,14 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createRootRouteWithContext, createRoute, createRouter, redirect } from '@tanstack/react-router';
 import { queryClient } from './api/queryClient';
-import { meQueryOptions, playersQueryOptions } from './api/queries';
+import { meQueryOptions, playersQueryOptions, eventsQueryOptions } from './api/queries';
 import { RootLayout } from './components/layout/RootLayout';
 import { LoginPage } from './pages/LoginPage';
 import { PlayersPage } from './pages/PlayersPage';
 import { NewPlayerPage } from './pages/NewPlayerPage';
 import { PlayerDetailPage } from './pages/PlayerDetailPage';
 import { CalendarPage } from './pages/CalendarPage';
+import { NewEventPage } from './pages/NewEventPage';
 
 type RouterContext = {
   queryClient: QueryClient;
@@ -77,8 +78,18 @@ export const playerDetailRoute = createRoute({
 const calendarRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/calendar',
-  beforeLoad: requireAuth,
+  beforeLoad: async ({ context }) => {
+    await requireAuth({ context });
+    await context.queryClient.ensureQueryData(eventsQueryOptions);
+  },
   component: CalendarPage,
+});
+
+const newEventRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/calendar/new',
+  beforeLoad: requireAuth,
+  component: NewEventPage,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -88,6 +99,7 @@ const routeTree = rootRoute.addChildren([
   newPlayerRoute,
   playerDetailRoute,
   calendarRoute,
+  newEventRoute,
 ]);
 
 export const router = createRouter({
