@@ -11,14 +11,12 @@ and lazy — most items here will never need one.
 ## 🔨 In progress
 - Player roster — list of team members with basic contact details. →
   [spec](docs/specs/player-roster.md)
+- Events & calendar — 7-day calendar view and event creation (matches,
+  training, one-offs). → [spec](docs/specs/events-calendar.md)
 
 ## 💡 Ideas
 
 **Team & players**
-
-**Events & calendar**
-- Event calendar — league matches with date, time, and location.
-- Multiple event types — friendlies, training sessions, summer tournaments, one-offs.
 
 **Availability (RSVP)**
 - Availability collection — players respond *going / not going / undecided* via a
