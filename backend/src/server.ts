@@ -28,6 +28,24 @@ app.register(authPlugin);
 app.register(authRoute);
 app.register(playersRoute);
 
+// @fastify/static only serves requests that match a real file under
+// frontend/dist; anything else (e.g. a client-side route like /players
+// hit via direct navigation or a refresh) falls through to here. Unmatched
+// API routes stay a JSON 404; everything else gets index.html so TanStack
+// Router can take over client-side, same as the Vite dev server's built-in
+// SPA fallback already does in dev.
+app.setNotFoundHandler((request, reply) => {
+  if (request.raw.url?.startsWith('/api/')) {
+    reply.code(404).send({
+      message: `Route ${request.method}:${request.raw.url} not found`,
+      error: 'Not Found',
+      statusCode: 404,
+    });
+    return;
+  }
+  reply.sendFile('index.html');
+});
+
 const PORT = Number(process.env.PORT ?? 3000);
 
 try {
