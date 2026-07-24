@@ -3,7 +3,9 @@ import { Badge } from '@/components/ui/badge';
 import { positionLabel } from './positions';
 
 export function PositionBadges({ positions }: { positions: PlayerPosition[] }) {
-  if (positions.length === 0) return null;
+  if (positions.length === 0) {
+    return <span className="text-sm text-muted-foreground italic">No position</span>;
+  }
 
   return (
     <div className="flex flex-wrap gap-1">
