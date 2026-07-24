@@ -22,12 +22,13 @@ See [`docs/decisions/0001-choose-stack.md`](docs/decisions/0001-choose-stack.md)
   `frontend/src/index.css` are extracted from the developer's Claude Design
   project ("Makop Hazard App"): dark surfaces, brand-yellow accent,
   Archivo/Space Grotesk/JetBrains Mono type.
-- **Database:** PostgreSQL 16, schema seeded via `db/init.sql`. **Caveat:**
-  this only runs when Postgres initializes a *fresh, empty* volume — it does
-  **not** apply to an already-initialized database. Every schema change needs
-  its SQL run by hand against any environment whose volume predates the
-  change (in practice: production, once it's been deployed once). No
-  migration tool yet (per ADR 0001).
+- **Database:** PostgreSQL 16, schema applied by an in-app migration runner
+  (`backend/src/migrate.ts`) that runs numbered `.sql` files from
+  `db/migrations/` automatically on backend startup — fresh volume or
+  already-initialized one (production included) alike, no manual SQL step.
+  See [ADR 0006](docs/decisions/0006-in-app-sql-migration-runner.md) and
+  `db/migrations/README.md` (the rules every migration file follows: guarded/
+  idempotent, backfill before tightening or dropping anything).
 - **Infra:** Docker (multi-stage build) + Docker Compose; production runs
   behind a shared `caddy-docker-proxy` on the VPS (owns ports 80/443,
   routes by Docker labels over the external `caddy_net` network — see
@@ -86,6 +87,10 @@ reads them every session, not in a separate tool.
   (`frontend/src/api/queries.ts` / `mutations.ts`), not a raw `useEffect` +
   `fetch`/`apiFetch` in a component — see
   [ADR 0005](docs/decisions/0005-adopt-tanstack-router-and-query.md).
+- Schema change = a new numbered file in `db/migrations/`, following the rules
+  in `db/migrations/README.md` (guarded/idempotent, backfill before
+  tightening or dropping anything). It applies itself on the next backend
+  boot in every environment — never hand-run SQL against production.
 
 ## Guardrails
 - Keep this file current — update it whenever stack, commands, or conventions change.

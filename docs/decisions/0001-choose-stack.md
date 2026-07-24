@@ -26,13 +26,20 @@ PoC's single page:
 - **Backend:** Node 24 + TypeScript + Fastify, raw `pg` driver. No ORM or
   migration tool yet — keep it minimal and SQL-first like the PoC; revisit once
   the schema grows past what hand-written SQL + `db/init.sql` seeding can
-  comfortably handle.
+  comfortably handle. **Superseded:** the "revisit" happened in
+  [ADR 0006](0006-in-app-sql-migration-runner.md) — the schema stayed raw SQL,
+  but seeding/migrating it moved off `db/init.sql`'s fresh-volume-only
+  mechanism onto an in-app runner, since the manual hand-run-SQL step (not the
+  schema itself) is what stopped scaling.
 - **Frontend:** React + Vite + TypeScript (SPA). Vite dev server with HMR in
   development, proxying `/api` to the backend; `vite build` output served as
   static files by Fastify (`@fastify/static`) in production — same
   single-origin pattern as the PoC.
-- **Database:** PostgreSQL 16 (`postgres:16-alpine`), schema seeded via
-  `db/init.sql` mounted into the container's init directory.
+- **Database:** PostgreSQL 16 (`postgres:16-alpine`), schema applied via an
+  in-app migration runner (`db/migrations/`) — see
+  [ADR 0006](0006-in-app-sql-migration-runner.md). Originally seeded via
+  `db/init.sql` mounted into the container's init directory; that only ran on
+  a fresh volume, which ADR 0006 replaced.
 - **Infra:** multi-stage Docker build; `docker-compose.yml` for local dev,
   `docker-compose.prod.yml` + `Caddyfile` for production; images built and
   pushed to GHCR and deployed to a VPS by a GitHub Actions workflow

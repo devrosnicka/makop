@@ -23,5 +23,6 @@ COPY backend/package.json backend/package-lock.json* ./
 RUN npm install --omit=dev
 COPY --from=backend-builder /app/backend/dist ./dist
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+COPY db/migrations ./db/migrations
 EXPOSE 3000
 CMD ["node", "dist/server.js"]

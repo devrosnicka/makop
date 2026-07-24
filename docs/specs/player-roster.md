@@ -66,8 +66,9 @@ first item under **Team & players** in `ROADMAP.md`.
 
 ## Technical approach
 - **Key files/modules touched:**
-  - `db/init.sql` — `players` table (`first_name`, `last_name`, `positions
-    TEXT[]`, ...). See migration note below for already-initialized DBs.
+  - `db/migrations/0001_init.sql` / `0002_players_name_split.sql` — `players`
+    table (`first_name`, `last_name`, `positions TEXT[]`, ...). See migration
+    note below.
   - `backend/src/routes/players.ts` — `playersRoute(app)` with
     `GET /api/players`, `POST /api/players`, `DELETE /api/players/:id`;
     exports `PLAYER_POSITIONS` (the allowed `positions` values).
@@ -99,27 +100,13 @@ first item under **Team & players** in `ROADMAP.md`.
     `PLAYER_POSITIONS`, not a DB constraint or a junction table — appropriate
     for a fixed 3-value set on a solo project; revisit if positions become
     configurable.
-  - `db/init.sql` only runs on a fresh, empty Postgres volume (per
-    `CLAUDE.md`). Any already-initialized DB (local dev volume, and
-    production once deployed) needs this hand-run migration instead:
-    ```sql
-    ALTER TABLE players
-      ADD COLUMN first_name TEXT,
-      ADD COLUMN last_name  TEXT,
-      ADD COLUMN positions  TEXT[] NOT NULL DEFAULT '{}';
-    UPDATE players SET
-      first_name = split_part(name, ' ', 1),
-      last_name  = NULLIF(trim(substr(name, length(split_part(name,' ',1)) + 1)), ''),
-      positions  = CASE WHEN position IS NULL THEN '{}' ELSE ARRAY[lower(position)] END;
-    -- review rows where last_name ended up NULL before proceeding
-    ALTER TABLE players
-      ALTER COLUMN first_name SET NOT NULL,
-      ALTER COLUMN last_name  SET NOT NULL,
-      DROP COLUMN name,
-      DROP COLUMN position;
-    ```
-    Run via `docker compose -f docker-compose.prod.yml exec db psql -U "$DB_USER" -d "$DB_NAME"`
-    in prod (or the equivalent dev-compose command locally).
+  - **Superseded (schema delivery):** this originally needed a hand-run
+    `ALTER` over SSH, since `db/init.sql` only applied to a fresh volume.
+    That's now handled by `db/migrations/0002_players_name_split.sql`, applied
+    automatically on backend startup — see
+    [ADR 0006](../decisions/0006-in-app-sql-migration-runner.md) and
+    `db/migrations/README.md`. No manual SQL step needed on any environment,
+    including production.
   - **Superseded (this rework):** the original single-page table + inline add
     form (`App.tsx` panel, then `PlayersPage.tsx` with an always-visible
     form) is replaced by the tappable list / detail page / multi-step add
@@ -130,10 +117,10 @@ first item under **Team & players** in `ROADMAP.md`.
 How we'll prove this works end-to-end (not just "tests pass"):
 - [ ] `cd backend && npm run build` and `cd frontend && npm run build` both
       succeed.
-- [ ] `docker compose up --build` (fresh volume so `init.sql` creates the new
-      `players` shape), or the hand-run migration above against an existing
-      volume; seed an allowlisted manager per `CLAUDE.md` and log in via
-      Google.
+- [ ] `docker compose up --build` (fresh or existing volume — the migration
+      runner converges either to the new `players` shape on backend startup,
+      per ADR 0006); seed an allowlisted manager per `CLAUDE.md` and log in
+      via Google.
 - [ ] `curl -i localhost:3000/api/players` without a session cookie returns
       **401**.
 - [ ] In a mobile viewport: roster shows tappable rows (name, jersey, position

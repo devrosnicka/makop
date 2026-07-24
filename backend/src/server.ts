@@ -6,6 +6,7 @@ import { healthRoute } from './routes/health.js';
 import authPlugin from './auth/plugin.js';
 import { authRoute } from './routes/auth.js';
 import { playersRoute } from './routes/players.js';
+import { runMigrations } from './migrate.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -30,6 +31,10 @@ app.register(playersRoute);
 const PORT = Number(process.env.PORT ?? 3000);
 
 try {
+  // Converges the DB schema to match this build's expectations before
+  // accepting traffic — see db/migrations/README.md. Runs against a fresh
+  // volume and an already-initialized one (e.g. production) alike.
+  await runMigrations(app.log);
   await app.listen({ port: PORT, host: '0.0.0.0' });
 } catch (err) {
   app.log.error(err);
