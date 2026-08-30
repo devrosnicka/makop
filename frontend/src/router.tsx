@@ -7,6 +7,8 @@ import {
   eventsQueryOptions,
   seasonsQueryOptions,
   seasonDetailQueryOptions,
+  receivablesQueryOptions,
+  receivableDetailQueryOptions,
 } from './api/queries';
 import { RootLayout } from './components/layout/RootLayout';
 import { LoginPage } from './pages/LoginPage';
@@ -19,6 +21,9 @@ import { SeasonsPage } from './pages/SeasonsPage';
 import { NewSeasonPage } from './pages/NewSeasonPage';
 import { SeasonDetailPage } from './pages/SeasonDetailPage';
 import { NewSeasonCalculationPage } from './pages/NewSeasonCalculationPage';
+import { ReceivablesPage } from './pages/ReceivablesPage';
+import { NewReceivablePage } from './pages/NewReceivablePage';
+import { ReceivableDetailPage } from './pages/ReceivableDetailPage';
 
 type RouterContext = {
   queryClient: QueryClient;
@@ -142,6 +147,39 @@ export const newSeasonCalculationRoute = createRoute({
   component: NewSeasonCalculationPage,
 });
 
+const receivablesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/receivables',
+  beforeLoad: async ({ context }) => {
+    await requireAuth({ context });
+    // The page opens on the unpaid view, so that's what gets prefetched; the
+    // debtor tab and the "vše" filter load on demand.
+    await context.queryClient.ensureQueryData(receivablesQueryOptions('open'));
+  },
+  component: ReceivablesPage,
+});
+
+const newReceivableRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/receivables/new',
+  beforeLoad: requireAuth,
+  component: NewReceivablePage,
+});
+
+// Exported so the page can read $receivableId via this route's own
+// .useParams() — same pattern as playerDetailRoute.
+export const receivableDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/receivables/$receivableId',
+  beforeLoad: async ({ context, params }) => {
+    await requireAuth({ context });
+    await context.queryClient.ensureQueryData(
+      receivableDetailQueryOptions(Number(params.receivableId)),
+    );
+  },
+  component: ReceivableDetailPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -154,6 +192,9 @@ const routeTree = rootRoute.addChildren([
   newSeasonRoute,
   seasonDetailRoute,
   newSeasonCalculationRoute,
+  receivablesRoute,
+  newReceivableRoute,
+  receivableDetailRoute,
 ]);
 
 export const router = createRouter({

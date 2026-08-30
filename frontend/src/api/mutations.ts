@@ -7,6 +7,8 @@ import {
   eventsQueryOptions,
   seasonsQueryOptions,
   seasonDetailQueryOptions,
+  debtorsQueryOptions,
+  receivableDetailQueryOptions,
   type Me,
   type Player,
   type PlayerPosition,
@@ -15,6 +17,8 @@ import {
   type Season,
   type SeasonCalculation,
   type SeasonCalculationPlayer,
+  type Receivable,
+  type Payment,
 } from './queries';
 
 export type NewPlayer = {
@@ -113,6 +117,110 @@ export function useDeleteSeasonCalculation(seasonId: number) {
     mutationFn: () => apiFetch<void>(`/api/seasons/${seasonId}/calculation`, { method: 'DELETE' }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: seasonsQueryOptions.queryKey });
+      void queryClient.invalidateQueries({ queryKey: seasonDetailQueryOptions(seasonId).queryKey });
+    },
+  });
+}
+
+export type NewReceivable = {
+  player_id: number;
+  title: string;
+  amount: number;
+  due_date: string;
+  description: string;
+};
+
+export type NewPayment = {
+  amount: number;
+  paid_at: string;
+  note: string;
+};
+
+// Anything that changes money owed can change the list, the open receivable's
+// own detail, the debtor totals, and — for season-generated ones — the season
+// detail's "already generated" state. Rather than repeat four invalidations in
+// every mutation, they all funnel through this.
+function useInvalidateReceivables() {
+  const queryClient = useQueryClient();
+  return (receivableId?: number) => {
+    void queryClient.invalidateQueries({ queryKey: ['receivables'] });
+    void queryClient.invalidateQueries({ queryKey: debtorsQueryOptions.queryKey });
+    if (receivableId !== undefined) {
+      void queryClient.invalidateQueries({
+        queryKey: receivableDetailQueryOptions(receivableId).queryKey,
+      });
+    }
+  };
+}
+
+export function useCreateReceivable() {
+  const invalidate = useInvalidateReceivables();
+  return useMutation({
+    mutationFn: (receivable: NewReceivable) =>
+      apiFetch<Receivable>('/api/receivables', {
+        method: 'POST',
+        body: JSON.stringify(receivable),
+      }),
+    onSuccess: () => invalidate(),
+  });
+}
+
+export function useAddPayment(receivableId: number) {
+  const invalidate = useInvalidateReceivables();
+  return useMutation({
+    mutationFn: (payment: NewPayment) =>
+      apiFetch<{ payment: Payment; receivable: Receivable }>(
+        `/api/receivables/${receivableId}/payments`,
+        { method: 'POST', body: JSON.stringify(payment) },
+      ),
+    onSuccess: () => invalidate(receivableId),
+  });
+}
+
+export function useDeletePayment(receivableId: number) {
+  const invalidate = useInvalidateReceivables();
+  return useMutation({
+    mutationFn: (paymentId: number) =>
+      apiFetch<{ receivable: Receivable }>(
+        `/api/receivables/${receivableId}/payments/${paymentId}`,
+        { method: 'DELETE' },
+      ),
+    onSuccess: () => invalidate(receivableId),
+  });
+}
+
+export function useCancelReceivable(receivableId: number) {
+  const invalidate = useInvalidateReceivables();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<Receivable>(`/api/receivables/${receivableId}/cancel`, { method: 'POST' }),
+    onSuccess: () => invalidate(receivableId),
+  });
+}
+
+export function useDeleteReceivable() {
+  const invalidate = useInvalidateReceivables();
+  return useMutation({
+    mutationFn: (receivableId: number) =>
+      apiFetch<void>(`/api/receivables/${receivableId}`, { method: 'DELETE' }),
+    onSuccess: () => invalidate(),
+  });
+}
+
+// AC2: turns a season's locked calculation into one receivable per player.
+// Idempotent server-side, so a double click reports `skipped` instead of
+// doubling everyone's debt.
+export function useGenerateSeasonReceivables(seasonId: number) {
+  const queryClient = useQueryClient();
+  const invalidate = useInvalidateReceivables();
+  return useMutation({
+    mutationFn: (dueDate: string) =>
+      apiFetch<{ created: number; skipped: number }>(`/api/seasons/${seasonId}/receivables`, {
+        method: 'POST',
+        body: JSON.stringify({ due_date: dueDate }),
+      }),
+    onSuccess: () => {
+      invalidate();
       void queryClient.invalidateQueries({ queryKey: seasonDetailQueryOptions(seasonId).queryKey });
     },
   });

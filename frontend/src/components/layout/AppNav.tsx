@@ -5,6 +5,7 @@ const NAV_LINKS = [
   { to: '/players', label: 'Players' },
   { to: '/calendar', label: 'Calendar' },
   { to: '/seasons', label: 'Sezóny' },
+  { to: '/receivables', label: 'Pohledávky' },
 ] as const;
 
 export function AppNav() {

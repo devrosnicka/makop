@@ -104,6 +104,20 @@ export async function playersRoute(app: FastifyInstance) {
         return reply.status(400).send({ error: 'invalid player id' });
       }
 
+      // receivables.player_id is ON DELETE RESTRICT (0005_receivables.sql), so
+      // this would fail at the database anyway — checking first turns it into
+      // an explanation instead of a 500. Money owed is deliberately never
+      // cascaded away with the player.
+      const { rows: receivables } = await pool.query<{ count: string }>(
+        'SELECT COUNT(*) AS count FROM receivables WHERE player_id = $1',
+        [id],
+      );
+      if (Number(receivables[0].count) > 0) {
+        return reply.status(409).send({
+          error: 'this player has receivables — cancel or delete those first',
+        });
+      }
+
       const { rowCount } = await pool.query('DELETE FROM players WHERE id = $1', [id]);
       if (rowCount === 0) {
         return reply.status(404).send({ error: 'player not found' });

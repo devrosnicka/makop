@@ -117,7 +117,20 @@ export async function seasonsRoute(app: FastifyInstance) {
           )
         : { rows: [] as SeasonCalculationPlayer[] };
 
-      return reply.send({ season, calculation, players });
+      // Lets the detail page show "receivables already generated" without a
+      // second request (and without guessing from the receivables list).
+      const { rows: receivableCounts } = await pool.query<{ count: string }>(
+        `SELECT COUNT(*) AS count FROM receivables
+          WHERE source_type = 'season' AND source_id = $1`,
+        [id],
+      );
+
+      return reply.send({
+        season,
+        calculation,
+        players,
+        receivables_count: Number(receivableCounts[0].count),
+      });
     },
   );
 
@@ -245,6 +258,22 @@ export async function seasonsRoute(app: FastifyInstance) {
         return reply.status(400).send({ error: 'invalid season id' });
       }
 
+      // Receivables generated from this season point back at it by
+      // source_id, and they may already carry recorded payments — dropping
+      // the calculation under them would leave real debts explaining
+      // themselves with a number nobody can look up any more.
+      const { rows: receivables } = await pool.query<{ count: string }>(
+        `SELECT COUNT(*) AS count FROM receivables
+          WHERE source_type = 'season' AND source_id = $1`,
+        [seasonId],
+      );
+      if (Number(receivables[0].count) > 0) {
+        return reply.status(409).send({
+          error:
+            'receivables have already been generated for this season — remove them before deleting the calculation',
+        });
+      }
+
       // The snapshot rows go with it via ON DELETE CASCADE — deleting is the
       // only supported way to correct a confirmed calculation.
       const { rowCount } = await pool.query('DELETE FROM season_calculations WHERE season_id = $1', [
@@ -254,6 +283,94 @@ export async function seasonsRoute(app: FastifyInstance) {
         return reply.status(404).send({ error: 'no calculation for this season' });
       }
       return reply.status(204).send();
+    },
+  );
+
+  // Turns a locked calculation into money actually owed: one receivable per
+  // snapshotted player, for the contribution that was frozen at confirmation
+  // time (see docs/specs/receivables.md, AC2). Deliberately a separate,
+  // manager-triggered step rather than a side effect of confirming — the
+  // manager picks the due date here, and a calculation is useful on its own.
+  app.post<{ Params: { id: string } }>(
+    '/api/seasons/:id/receivables',
+    { preHandler: app.authenticate },
+    async (request, reply) => {
+      const seasonId = Number(request.params.id);
+      if (!Number.isInteger(seasonId)) {
+        return reply.status(400).send({ error: 'invalid season id' });
+      }
+
+      const body = request.body as { due_date?: unknown };
+      let dueDate: string | null = null;
+      if (typeof body.due_date === 'string' && body.due_date.trim().length > 0) {
+        const trimmed = body.due_date.trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+          return reply.status(400).send({ error: 'due_date must be in YYYY-MM-DD format' });
+        }
+        dueDate = trimmed;
+      }
+
+      const { rows: seasons } = await pool.query<Season>('SELECT * FROM seasons WHERE id = $1', [
+        seasonId,
+      ]);
+      const season = seasons[0];
+      if (!season) {
+        return reply.status(404).send({ error: 'season not found' });
+      }
+
+      const { rows: calculations } = await pool.query<SeasonCalculation>(
+        'SELECT * FROM season_calculations WHERE season_id = $1',
+        [seasonId],
+      );
+      const calculation = calculations[0];
+      if (!calculation) {
+        return reply.status(409).send({
+          error: 'this season has no confirmed calculation yet',
+        });
+      }
+
+      // Only players still on the roster get a receivable: receivables.player_id
+      // is a real foreign key (unlike the name-only snapshot), so someone who
+      // has since left simply has no live debt to create.
+      const { rows: snapshot } = await pool.query<{ player_id: number | null }>(
+        `SELECT scp.player_id
+           FROM season_calculation_players scp
+           JOIN players p ON p.id = scp.player_id
+          WHERE scp.season_calculation_id = $1`,
+        [calculation.id],
+      );
+      const playerIds = snapshot
+        .map((row) => row.player_id)
+        .filter((id): id is number => id !== null);
+      if (playerIds.length === 0) {
+        return reply.status(409).send({
+          error: "none of this calculation's players are on the roster any more",
+        });
+      }
+
+      // ON CONFLICT DO NOTHING against the partial unique index in
+      // 0005_receivables.sql makes a re-run a no-op instead of doubling
+      // everyone's debt — RETURNING then reports only what was actually new.
+      const { rows: created } = await pool.query<{ id: number }>(
+        `INSERT INTO receivables (player_id, title, description, amount, due_date, source_type, source_id)
+         SELECT id, $2, $3, $4, $5, 'season', $6
+           FROM UNNEST($1::int[]) AS s(id)
+         ON CONFLICT DO NOTHING
+         RETURNING id`,
+        [
+          playerIds,
+          `Sezónní příspěvek — ${season.name}`,
+          `Příspěvek na sezónu ${season.name} podle uzamčeného výpočtu.`,
+          calculation.player_contribution,
+          dueDate,
+          seasonId,
+        ],
+      );
+
+      return reply.status(201).send({
+        created: created.length,
+        skipped: playerIds.length - created.length,
+      });
     },
   );
 }

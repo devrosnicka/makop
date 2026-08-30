@@ -1,4 +1,4 @@
-import { formatCzk } from './calculation';
+import { formatCzk } from '@/lib/money';
 
 type SeasonSummaryProps = {
   selectedPlayersCount: number;

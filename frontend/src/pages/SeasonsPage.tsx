@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { seasonsQueryOptions } from '@/api/queries';
-import { formatCzk } from '@/components/seasons/calculation';
-import { playersLabel } from '@/components/seasons/plural';
+import { formatCzk } from '@/lib/money';
+import { playersLabel } from '@/lib/plural';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {

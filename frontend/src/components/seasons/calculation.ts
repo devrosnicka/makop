@@ -35,20 +35,3 @@ export function calculateSeason(input: SeasonCalculationInput): SeasonCalculatio
     surplus: playerContribution * input.selectedPlayersCount - totalSeasonCost,
   };
 }
-
-const CZK = new Intl.NumberFormat('cs-CZ', {
-  style: 'currency',
-  currency: 'CZK',
-  maximumFractionDigits: 0,
-});
-
-export function formatCzk(amount: number): string {
-  return CZK.format(amount);
-}
-
-// Form fields are strings; blank counts as 0 so the preview stays live while
-// the manager is still typing.
-export function parseAmount(value: string): number {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
-}

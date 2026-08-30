@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { calculateSeason, parseAmount } from './calculation';
-import { playersLabel } from './plural';
+import { parseAmount } from '@/lib/money';
+import { calculateSeason } from './calculation';
+import { playersLabel } from '@/lib/plural';
 import { SeasonSummary } from './SeasonSummary';
 
 // One step per tier of input, ending in an explicit confirmation — unlike
