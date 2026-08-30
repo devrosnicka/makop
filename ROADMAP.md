@@ -16,6 +16,9 @@ and lazy — most items here will never need one.
 - Season fee calculation — create a season, pick the players, enter the costs,
   and freeze the resulting per-player contribution. →
   [spec](docs/specs/season-fee-calculation.md)
+- Receivables — one generic "player owes the team X" record (season fees,
+  jerseys, fines, friendly matches) with partial payments and a debtor list. →
+  [spec](docs/specs/receivables.md)
 
 ## 💡 Ideas
 
@@ -28,10 +31,13 @@ and lazy — most items here will never need one.
 
 **Money**
 - Season fee tracking — two seasons per year (half-year each); track who owes and
-  who has paid. *(The calculation half is in progress above; tracking payments
-  against it is still an idea.)*
-- Ad-hoc collections — collect and track money for extra events.
+  who has paid. *(Both halves are in progress above: the calculation, and the
+  receivables module that tracks payments against it.)*
+- Ad-hoc collections — collect and track money for extra events. *(Covered by
+  the receivables module above, minus a per-event grouping.)*
 - Balance overview — per-player view of what each person owes / has paid.
+  *(The debtor list is the first half; a full per-player history is still an
+  idea.)*
 - Payment reminders — nudge players who haven't paid yet.
 - Online payments *(later)* — pay fees through the app via a payment provider,
   instead of only tracking bank-transfer/cash payments.
