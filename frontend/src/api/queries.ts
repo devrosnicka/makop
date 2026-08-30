@@ -52,3 +52,56 @@ export const eventsQueryOptions = queryOptions({
   queryKey: ['events'],
   queryFn: () => apiFetch<{ events: MakopEvent[] }>('/api/events').then((data) => data.events),
 });
+
+export type Season = {
+  id: number;
+  name: string;
+  created_by: string | null;
+  created_at: string;
+  // Present on the list endpoint only (LEFT JOIN); null when the season has
+  // no confirmed calculation yet.
+  player_contribution: number | null;
+  selected_players_count: number | null;
+};
+
+export type SeasonCalculation = {
+  id: number;
+  season_id: number;
+  player_registration_fee: number;
+  referee_match_fee: number;
+  referee_match_count: number;
+  selected_players_count: number;
+  registration_cost: number;
+  referee_cost: number;
+  total_season_cost: number;
+  player_contribution: number;
+  is_locked: boolean;
+  created_at: string;
+};
+
+export type SeasonCalculationPlayer = {
+  id: number;
+  season_calculation_id: number;
+  player_id: number | null;
+  player_name_snapshot: string;
+};
+
+export type SeasonDetail = {
+  season: Season;
+  calculation: SeasonCalculation | null;
+  players: SeasonCalculationPlayer[];
+};
+
+export const seasonsQueryOptions = queryOptions({
+  queryKey: ['seasons'],
+  queryFn: () => apiFetch<{ seasons: Season[] }>('/api/seasons').then((data) => data.seasons),
+});
+
+// A factory rather than a constant because the key carries the season id —
+// the detail response (season + its locked calculation + player snapshot) is
+// what every season screen reads.
+export const seasonDetailQueryOptions = (seasonId: number) =>
+  queryOptions({
+    queryKey: ['seasons', seasonId],
+    queryFn: () => apiFetch<SeasonDetail>(`/api/seasons/${seasonId}`),
+  });

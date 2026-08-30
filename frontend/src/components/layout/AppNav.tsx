@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 const NAV_LINKS = [
   { to: '/players', label: 'Players' },
   { to: '/calendar', label: 'Calendar' },
+  { to: '/seasons', label: 'Sezóny' },
 ] as const;
 
 export function AppNav() {

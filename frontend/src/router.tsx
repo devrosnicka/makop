@@ -1,7 +1,13 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createRootRouteWithContext, createRoute, createRouter, redirect } from '@tanstack/react-router';
 import { queryClient } from './api/queryClient';
-import { meQueryOptions, playersQueryOptions, eventsQueryOptions } from './api/queries';
+import {
+  meQueryOptions,
+  playersQueryOptions,
+  eventsQueryOptions,
+  seasonsQueryOptions,
+  seasonDetailQueryOptions,
+} from './api/queries';
 import { RootLayout } from './components/layout/RootLayout';
 import { LoginPage } from './pages/LoginPage';
 import { PlayersPage } from './pages/PlayersPage';
@@ -9,6 +15,10 @@ import { NewPlayerPage } from './pages/NewPlayerPage';
 import { PlayerDetailPage } from './pages/PlayerDetailPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { NewEventPage } from './pages/NewEventPage';
+import { SeasonsPage } from './pages/SeasonsPage';
+import { NewSeasonPage } from './pages/NewSeasonPage';
+import { SeasonDetailPage } from './pages/SeasonDetailPage';
+import { NewSeasonCalculationPage } from './pages/NewSeasonCalculationPage';
 
 type RouterContext = {
   queryClient: QueryClient;
@@ -92,6 +102,46 @@ const newEventRoute = createRoute({
   component: NewEventPage,
 });
 
+const seasonsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/seasons',
+  beforeLoad: async ({ context }) => {
+    await requireAuth({ context });
+    await context.queryClient.ensureQueryData(seasonsQueryOptions);
+  },
+  component: SeasonsPage,
+});
+
+const newSeasonRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/seasons/new',
+  beforeLoad: requireAuth,
+  component: NewSeasonPage,
+});
+
+// Exported so the page can read $seasonId via this route's own .useParams()
+// — same pattern as playerDetailRoute.
+export const seasonDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/seasons/$seasonId',
+  beforeLoad: async ({ context, params }) => {
+    await requireAuth({ context });
+    await context.queryClient.ensureQueryData(seasonDetailQueryOptions(Number(params.seasonId)));
+  },
+  component: SeasonDetailPage,
+});
+
+export const newSeasonCalculationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/seasons/$seasonId/calculation',
+  beforeLoad: async ({ context }) => {
+    await requireAuth({ context });
+    // The wizard picks from the roster, so have it ready before it renders.
+    await context.queryClient.ensureQueryData(playersQueryOptions);
+  },
+  component: NewSeasonCalculationPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -100,6 +150,10 @@ const routeTree = rootRoute.addChildren([
   playerDetailRoute,
   calendarRoute,
   newEventRoute,
+  seasonsRoute,
+  newSeasonRoute,
+  seasonDetailRoute,
+  newSeasonCalculationRoute,
 ]);
 
 export const router = createRouter({

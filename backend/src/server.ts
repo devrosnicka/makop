@@ -7,6 +7,7 @@ import authPlugin from './auth/plugin.js';
 import { authRoute } from './routes/auth.js';
 import { playersRoute } from './routes/players.js';
 import { eventsRoute } from './routes/events.js';
+import { seasonsRoute } from './routes/seasons.js';
 import { runMigrations } from './migrate.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,6 +30,7 @@ app.register(authPlugin);
 app.register(authRoute);
 app.register(playersRoute);
 app.register(eventsRoute);
+app.register(seasonsRoute);
 
 // @fastify/static only serves requests that match a real file under
 // frontend/dist; anything else (e.g. a client-side route like /players
